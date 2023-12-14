@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/movapi/internal/data"
+	"github.com/movapi/internal/validator"
 )
 
 func (app *application) createMovieHandler(w http.ResponseWriter, r *http.Request) {
@@ -22,8 +23,32 @@ func (app *application) createMovieHandler(w http.ResponseWriter, r *http.Reques
 		app.badRequestResponse(w, r, err)
 		return
 	}
+	movie := &data.Movie{
+		Title:   input.Title,
+		Year:    input.Year,
+		Runtime: input.Runtime,
+		Genres:  input.Genres,
+	}
 
-	fmt.Fprintf(w, "%+v\n", input)
+	v := validator.New()
+
+	if data.ValidateMovie(v, movie); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+
+	err = app.models.Movie.Insert(movie)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	headers := make(http.Header)
+	headers.Set("Location", fmt.Sprintf("/v1/movies/%d", movie.ID))
+	err = app.writeJSON(w, http.StatusCreated, envelope{"movie": movie}, headers)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
 }
 
 func (app *application) showMovieHandler(w http.ResponseWriter, r *http.Request) {
@@ -36,7 +61,7 @@ func (app *application) showMovieHandler(w http.ResponseWriter, r *http.Request)
 		ID:        id,
 		CreatedAt: time.Now(),
 		Title:     "Warrior",
-		RunTime:   100,
+		Runtime:   100,
 		Genres:    []string{"Sports", "Drama", "Family"},
 		Version:   1,
 	}
