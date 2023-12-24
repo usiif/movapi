@@ -19,7 +19,7 @@ func (app *application) createMovieHandler(w http.ResponseWriter, r *http.Reques
 
 	err := app.readJSON(w, r, &input)
 	if err != nil {
-		app.logger.Println(err)
+		app.logger.PrintError(err, nil)
 		app.badRequestResponse(w, r, err)
 		return
 	}
@@ -72,7 +72,7 @@ func (app *application) showMovieHandler(w http.ResponseWriter, r *http.Request)
 
 	err = app.writeJSON(w, http.StatusOK, envelope{"movie": movie}, nil)
 	if err != nil {
-		app.logger.Println(err)
+		app.logger.PrintError(err, nil)
 		app.serverErrorResponse(w, r, err)
 	}
 }
