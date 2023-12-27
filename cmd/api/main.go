@@ -5,11 +5,13 @@ import (
 	"database/sql"
 	"flag"
 	"os"
+	"sync"
 	"time"
 
 	_ "github.com/lib/pq"
 	"github.com/movapi/internal/data"
 	"github.com/movapi/internal/jsonlog"
+	"github.com/movapi/internal/mailer"
 )
 
 const version = "1.0.0"
@@ -28,12 +30,21 @@ type config struct {
 		burst   int
 		enabled bool
 	}
+	smtp struct {
+		host     string
+		port     int
+		username string
+		password string
+		sender   string
+	}
 }
 
 type application struct {
 	config config
 	logger *jsonlog.Logger
 	models data.Models
+	mailer mailer.Mailer
+	wg     sync.WaitGroup
 }
 
 func main() {
@@ -48,6 +59,12 @@ func main() {
 	flag.Float64Var(&cnfg.limiter.rps, "limiter-rps", 2, "Rate limiter max requests per second")
 	flag.IntVar(&cnfg.limiter.burst, "limiter-burst", 4, "Rate limiter burst")
 	flag.BoolVar(&cnfg.limiter.enabled, "limiter-enabled", true, "Enable rate limiter")
+
+	flag.StringVar(&cnfg.smtp.host, "smtp-host", "sandbox.smtp.mailtrap.io", "SMTP host")
+	flag.IntVar(&cnfg.smtp.port, "smtp-port", 2525, "SMTP port")
+	flag.StringVar(&cnfg.smtp.username, "smtp-username", "4cfc466eea6664", "SMTP username")
+	flag.StringVar(&cnfg.smtp.password, "smtp-password", "407823874fac4d", "SMTP password")
+	flag.StringVar(&cnfg.smtp.sender, "smtp-sender", "Movapi <no-reply@Movapi.com>", "SMTP sender")
 	flag.Parse()
 
 	logger := jsonlog.New(os.Stdout, jsonlog.LeveInfo)
@@ -64,6 +81,7 @@ func main() {
 		config: cnfg,
 		logger: logger,
 		models: data.NewModels(db),
+		mailer: mailer.New(cnfg.smtp.host, cnfg.smtp.port, cnfg.smtp.username, cnfg.smtp.password, cnfg.smtp.sender),
 	}
 
 	err = app.serve()
