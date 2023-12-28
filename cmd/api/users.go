@@ -54,6 +54,12 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	err = app.models.Permissions.AddForUser(user.ID, "movies:read")
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
 	token, err := app.models.Tokens.New(user.ID, 3*24*time.Hour, data.ScopeActiviation)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
@@ -67,7 +73,7 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 			"activationToken": token.PlainText,
 		}
 		err = app.mailer.Send(user.Email, "user_welcome.tmpl", data)
-		fmt.Println(token.PlainText)
+		fmt.Println(token.PlainText) // REMOVE THIS
 		if err != nil {
 			app.logger.PrintError(err, nil)
 		}
