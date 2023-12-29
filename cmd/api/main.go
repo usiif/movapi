@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"flag"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -37,6 +38,9 @@ type config struct {
 		password string
 		sender   string
 	}
+	cors struct {
+		corsSafeList []string
+	}
 }
 
 type application struct {
@@ -65,6 +69,11 @@ func main() {
 	flag.StringVar(&cnfg.smtp.username, "smtp-username", "4cfc466eea6664", "SMTP username")
 	flag.StringVar(&cnfg.smtp.password, "smtp-password", "407823874fac4d", "SMTP password")
 	flag.StringVar(&cnfg.smtp.sender, "smtp-sender", "Movapi <no-reply@Movapi.com>", "SMTP sender")
+	flag.Func("cors-trusted-origins", "Trust CORS origins - Space seperated", func(s string) error {
+		cnfg.cors.corsSafeList = strings.Split(s, " ")
+		return nil
+	})
+
 	flag.Parse()
 
 	logger := jsonlog.New(os.Stdout, jsonlog.LeveInfo)
