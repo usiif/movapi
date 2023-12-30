@@ -20,5 +20,3 @@ func (app *application) healthcheck(w http.ResponseWriter, r *http.Request) {
 		app.serverErrorResponse(w, r, err)
 	}
 }
-
-//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
