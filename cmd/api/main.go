@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"expvar"
 	"flag"
+	"fmt"
 	"os"
 	"runtime"
 	"strings"
@@ -15,9 +16,12 @@ import (
 	"github.com/movapi/internal/data"
 	"github.com/movapi/internal/jsonlog"
 	"github.com/movapi/internal/mailer"
+	"github.com/movapi/internal/vcs"
 )
 
-const version = "1.0.0"
+var (
+	version = vcs.Version()
+)
 
 type config struct {
 	port int
@@ -58,7 +62,7 @@ func main() {
 
 	flag.IntVar(&cnfg.port, "port", 3000, "API server port")
 	flag.StringVar(&cnfg.env, "env", "development", "Envirnoment -> Dev|Staging|Prod")
-	flag.StringVar(&cnfg.db.dsn, "db-dsn", os.Getenv("MOVAPI_DB_DSN"), "PostgreSQL DSN")
+	flag.StringVar(&cnfg.db.dsn, "db-dsn", "", "PostgreSQL DSN")
 	flag.IntVar(&cnfg.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open conns")
 	flag.IntVar(&cnfg.db.maxIdleConns, "db-max-idle-conns", 25, "PostgreSQL max idel conns")
 	flag.StringVar((&cnfg.db.maxIdleTime), "db-max-idle-time", "15m", "PostgreSQL max idel time")
@@ -76,8 +80,14 @@ func main() {
 		return nil
 	})
 
+	displayVersion := flag.Bool("version", false, "Display version and exit")
+
 	flag.Parse()
 
+	if *displayVersion {
+		fmt.Printf("Version:\t%s\n", version)
+		os.Exit(0)
+	}
 	logger := jsonlog.New(os.Stdout, jsonlog.LeveInfo)
 
 	db, err := openDB(cnfg)
