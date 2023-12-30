@@ -32,7 +32,7 @@ An authentication token will be sent to the registered email address. Please sub
 ```
 After that, you are free to use the API as you choose. To begin, you will be given _read_ privileges.  
 
-### Authorization 
+## Authorization 
 Whenever you log into your account, you will be sent a stateful token in the format: 
 ```
 {
@@ -46,3 +46,24 @@ For subsequent requests, You must include the provided token in an ``Authorizati
 ```
 Authorization: Bearer IEYZQUBEMPPAKPOAWTPV6YJ6RM"
 ```
+# Getting started 
+To post a new movie, Follow the format: 
+```
+{
+  "title": "The Holdover",
+  "year": 2023,
+  "runtime": 133,
+  "genres": ["Comedy", "Drama"]
+}
+```
+You can hit the ``v1/movies`` enpoint with the following filters: 
+- title
+- genres
+- page
+- page_size
+- sort
+
+Example request might look something like that: 
+``/v1/movies?title=godfather&genres=crime,drama&page=1&page_size=5&sort=-year``  
+
+In this example, the - before the year field in the sort query parameter indicates that the movies should be sorted in descending order based on the year attribute. Adjust the field as needed for your specific use case.
